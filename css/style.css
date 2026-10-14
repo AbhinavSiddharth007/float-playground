@@ -1,0 +1,126 @@
+/* Colours live in variables so light/dark mode is one block each. */
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --line: #2a2f3a;
+  --text: #e6e8ee;
+  --muted: #8b93a7;
+  --sign: #ff6b6b;
+  --exp: #f7b955;
+  --frac: #5aa9ff;
+  --good: #4cd38a;
+  --bad: #ff6b6b;
+  --mark: #c792ea;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --line: #dde1e8; --text: #1a1d24; --muted: #5d6578;
+    --sign: #d93a3a; --exp: #b87800; --frac: #1f6fd1; --good: #178a4a; --bad: #d93a3a; --mark: #8a3ec2;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+header, main, footer { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+header { padding-top: 40px; padding-bottom: 8px; }
+.kicker { color: var(--muted); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; margin: 0; }
+h1 { font-size: clamp(30px, 6vw, 52px); margin: 6px 0 8px; }
+h1 code { font-family: var(--mono); }
+.lede { color: var(--muted); max-width: 640px; margin: 0; }
+footer { color: var(--muted); font-size: 13px; padding: 24px 16px 48px; }
+code, .mono { font-family: var(--mono); }
+
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 20px; margin: 20px 0;
+}
+h2 { font-size: 20px; margin: 0 0 6px; display: flex; align-items: center; gap: 10px; }
+.num {
+  display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--line); font-size: 14px;
+}
+.hint { color: var(--muted); margin: 0 0 14px; }
+
+/* --- equation ---------------------------------------------------------- */
+.equation { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.equation input {
+  font: 600 24px var(--mono); width: 8.5em; padding: 8px 12px; color: var(--text);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+}
+.equation input:focus { outline: 2px solid var(--frac); outline-offset: 1px; }
+.equation input.invalid { border-color: var(--bad); }
+.op { font: 600 22px var(--mono); color: var(--muted); }
+.verdict { font: 20px var(--mono); margin: 16px 0 4px; word-break: break-all; }
+.verdict .t { color: var(--good); font-weight: 700; }
+.verdict .f { color: var(--bad); font-weight: 700; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; color: var(--muted); }
+button {
+  font: 14px var(--mono); color: var(--text); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+}
+button:hover { border-color: var(--frac); }
+
+/* --- bits -------------------------------------------------------------- */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; color: var(--muted); font-size: 14px; margin-bottom: 10px; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: -8px; }
+.sw.sign { background: var(--sign); } .sw.exp { background: var(--exp); } .sw.frac { background: var(--frac); }
+
+.operand { border-top: 1px solid var(--line); padding: 14px 0; }
+.operand:first-child { border-top: 0; }
+.operand h3 { font: 600 15px var(--mono); margin: 0 0 8px; }
+.bits { display: flex; flex-wrap: wrap; gap: 1px; margin-bottom: 8px; }
+.bit {
+  width: 13px; height: 22px; display: grid; place-items: center; cursor: pointer;
+  font: 12px var(--mono); border-radius: 3px; user-select: none;
+  background: var(--bg); border: 1px solid var(--line);
+}
+.bit.one { color: var(--bg); font-weight: 700; }
+.bit.sign { border-color: var(--sign); } .bit.sign.one { background: var(--sign); }
+.bit.exp { border-color: var(--exp); } .bit.exp.one { background: var(--exp); }
+.bit.frac { border-color: var(--frac); } .bit.frac.one { background: var(--frac); }
+.bit.gap { margin-left: 6px; }
+.bit:hover { outline: 2px solid var(--text); }
+
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; font-size: 14px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-family: var(--mono); word-break: break-all; }
+.same { color: var(--good); }
+.diff { color: var(--bad); }
+
+/* --- binary expansion -------------------------------------------------- */
+.expansion { font: 14px/1.7 var(--mono); margin-bottom: 12px; word-break: break-all; }
+.expansion .label { color: var(--muted); }
+.expansion .keep { color: var(--frac); }
+.expansion .lost { color: var(--bad); text-decoration: line-through; opacity: .75; }
+.expansion .lead { color: var(--muted); }
+
+/* --- steps ------------------------------------------------------------- */
+.steps { margin: 0; padding-left: 22px; }
+.steps > li { margin-bottom: 16px; }
+.steps b { display: block; margin-bottom: 4px; }
+.rows {
+  font: 13px/1.6 var(--mono); background: var(--bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 12px; overflow-x: auto; white-space: pre;
+}
+.rows .k { color: var(--frac); } .rows .d { color: var(--bad); } .rows .m { color: var(--muted); }
+.badge { display: inline-block; font: 600 13px var(--mono); padding: 2px 8px; border-radius: 99px; border: 1px solid currentColor; }
+.badge.ok { color: var(--good); } .badge.no { color: var(--bad); }
+
+/* --- number line ------------------------------------------------------- */
+#line svg { width: 100%; height: auto; display: block; }
+#line text { font: 12px var(--mono); fill: var(--muted); }
+.line-notes { font: 14px var(--mono); margin-top: 8px; display: grid; gap: 4px; }
+
+/* --- compare ----------------------------------------------------------- */
+.compare { display: grid; gap: 10px; }
+.compare .row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 10px 12px; background: var(--bg); border-radius: 8px; border: 1px solid var(--line); font: 14px var(--mono); }
+
+@media (max-width: 600px) {
+  .equation input { width: 100%; font-size: 20px; }
+  .bit { width: 11px; height: 18px; font-size: 10px; }
+  .bit.gap { margin-left: 3px; }
+}

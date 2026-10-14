@@ -1,0 +1,9 @@
+{
+  "name": "float-playground",
+  "version": "1.0.0",
+  "description": "Why 0.1 + 0.2 !== 0.3 — an interactive IEEE 754 playground",
+  "private": true,
+  "scripts": {
+    "test": "node tests/float.test.js"
+  }
+}
