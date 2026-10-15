@@ -13,11 +13,19 @@
   --mark: #c792ea;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
+:root { color-scheme: dark; }
+/* Light theme: follows the OS setting, unless the page is forced to dark. */
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]) {
     --bg: #f6f7f9; --panel: #ffffff; --line: #dde1e8; --text: #1a1d24; --muted: #5d6578;
     --sign: #d93a3a; --exp: #b87800; --frac: #1f6fd1; --good: #178a4a; --bad: #d93a3a; --mark: #8a3ec2;
+    color-scheme: light;
   }
+}
+:root[data-theme="light"] {
+  --bg: #f6f7f9; --panel: #ffffff; --line: #dde1e8; --text: #1a1d24; --muted: #5d6578;
+  --sign: #d93a3a; --exp: #b87800; --frac: #1f6fd1; --good: #178a4a; --bad: #d93a3a; --mark: #8a3ec2;
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
