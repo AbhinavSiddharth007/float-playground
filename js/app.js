@@ -38,10 +38,14 @@
   // --- 0. verdict ------------------------------------------------------------
   function renderVerdict(typed, val, sum) {
     const eq = sum === val.c;
+    // Paint the printed sum red from the first character where it stops matching c.
+    const shown = String(sum), expected = String(val.c);
+    let i = 0;
+    while (i < shown.length && shown[i] === expected[i]) i++;
+    const printed = eq ? shown : `${shown.slice(0, i)}<span class="wrong">${shown.slice(i)}</span>`;
     $('verdict').innerHTML =
-      `${esc(typed.a)} + ${esc(typed.b)} = <b>${sum}</b><br>` +
-      `${esc(typed.a)} + ${esc(typed.b)} === ${esc(typed.c)} → ` +
-      `<span class="${eq ? 't' : 'f'}">${eq}</span>`;
+      `<div class="result"><span class="label">a + b evaluates to</span><output>${printed}</output></div>` +
+      `<div class="chip ${eq ? 't' : 'f'}">${esc(typed.a)} + ${esc(typed.b)} === ${esc(typed.c)} → ${eq}</div>`;
   }
 
   // --- 1. typed vs stored ----------------------------------------------------
@@ -67,18 +71,28 @@
     return `<span class="same">${storedStr.slice(0, i)}</span><span class="diff">${storedStr.slice(i)}</span>`;
   }
 
-  /** 64 coloured cells. Clicking one flips that bit (if `editable`). */
+  /**
+   * The 64 bits drawn like a CPU register diagram: three fields side by side,
+   * each labelled with its bit range. Clicking a cell flips it (if `key` is set).
+   */
   function bitsHtml(x, key) {
     const s = F.bitString(x);
-    let html = '';
-    for (let i = 0; i < 64; i++) {
-      const field = i === 0 ? 'sign' : i < 12 ? 'exp' : 'frac';
-      const gap = i === 1 || i === 12 ? ' gap' : '';
-      const one = s[i] === '1' ? ' one' : '';
-      const data = key ? ` data-key="${key}" data-i="${i}"` : '';
-      html += `<span class="bit ${field}${one}${gap}"${data} title="bit ${63 - i}">${s[i]}</span>`;
-    }
-    return `<div class="bits">${html}</div>`;
+    // [first cell, cell after the last, css class, name]. Cell 0 is bit 63.
+    const fields = [[0, 1, 'sign', 'sign'], [1, 12, 'exp', 'exponent · 11'], [12, 64, 'frac', 'fraction · 52']];
+    const html = fields.map(([from, to, cls, name]) => {
+      let cells = '';
+      for (let i = from; i < to; i++) {
+        const one = s[i] === '1' ? ' one' : '';
+        const data = key ? ` data-key="${key}" data-i="${i}"` : '';
+        cells += `<span class="bit${one}"${data} title="bit ${63 - i}">${s[i]}</span>`;
+      }
+      // flex-grow = number of bits, so each field's width matches its size.
+      const label = to - from === 1 ? `<b>${name}</b>`
+        : `<span>${63 - from}</span><b>${name}</b><span>${64 - to}</span>`;
+      return `<div class="field ${cls}" style="flex: ${to - from} 1 0">
+        <div class="cells">${cells}</div><div class="flabel">${label}</div></div>`;
+    }).join('');
+    return `<div class="register-scroll"><div class="register">${html}</div></div>`;
   }
 
   /** "(−1)^0 × 1.1001… × 2^−4" — the formula filled in for this number. */
@@ -101,7 +115,8 @@
       const stored = F.exactValue(row.x);
       const ulpOff = row.typed ? F.offsetInUlps(row.typed, row.x) : null;
       return `<div class="operand">
-        <h3>${row.label}${row.typed ? ` — you typed <code>${esc(row.typed)}</code>` : ' — the computed sum'}</h3>
+        <h3>${row.label}${row.typed ? ` · you typed <code>${esc(row.typed)}</code>` : ' · the computed sum'}
+          ${row.typed ? `<span class="tag ${ulpOff === 0 ? 'ok' : 'warn'}">${ulpOff === 0 ? 'stored exactly' : 'rounded'}</span>` : ''}</h3>
         ${bitsHtml(row.x, row.key)}
         <dl class="kv">
           <dt>formula</dt><dd>${formula(row.x)}</dd>
@@ -270,7 +285,7 @@ b = <span class="k">${bin(r.B.sign ? -r.B.significand : r.B.significand)}</span>
         'work in integers (e.g. cents) — exact while below 2^53']);
     }
     $('compare').innerHTML = rows.map(([code, res, note]) =>
-      `<div class="row"><span>${code}</span><span class="badge ${res ? 'ok' : 'no'}">${res}</span><span class="m" style="width:100%;color:var(--muted)">${note}</span></div>`).join('');
+      `<div class="row"><code>${code}</code><span class="badge ${res ? 'ok' : 'no'}">${res}</span><span class="note">${note}</span></div>`).join('');
   }
 
   // --- wiring ----------------------------------------------------------------

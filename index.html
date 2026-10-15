@@ -2,85 +2,119 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Why 0.1 + 0.2 ≠ 0.3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header>
-    <p class="kicker">Programming Interactivity · Final project</p>
-    <h1><code>0.1 + 0.2 !== 0.3</code></h1>
-    <p class="lede">Your computer isn't bad at maths. It stores every number in 64 bits,
-      and most decimals simply don't fit. Type any sum and watch where the error comes from.</p>
+  <!-- Hero: the live equation is the first thing you see -->
+  <header class="hero">
+    <div class="wrap">
+      <p class="kicker">IEEE 754 · binary64 · Programming Interactivity</p>
+      <h1>Why is <code>0.1 + 0.2</code> not <code>0.3</code>?</h1>
+      <p class="lede">Every JavaScript number is stored in exactly 64 bits. Most decimals don't fit,
+        so they get rounded. Change the numbers and follow the bits.</p>
+
+      <section id="expr" class="console" aria-label="the expression">
+        <div class="equation">
+          <label class="slot"><span>a</span><input id="a" value="0.1" spellcheck="false" autocomplete="off"></label>
+          <span class="op">+</span>
+          <label class="slot"><span>b</span><input id="b" value="0.2" spellcheck="false" autocomplete="off"></label>
+          <span class="op">===</span>
+          <label class="slot"><span>c</span><input id="c" value="0.3" spellcheck="false" autocomplete="off"></label>
+        </div>
+        <div id="verdict" class="verdict" aria-live="polite"></div>
+        <div class="presets" id="presets">
+          <span class="presets-label">Try</span>
+          <button data-a="0.1" data-b="0.2" data-c="0.3">0.1 + 0.2</button>
+          <button data-a="0.5" data-b="0.25" data-c="0.75">0.5 + 0.25</button>
+          <button data-a="0.1" data-b="0.7" data-c="0.8">0.1 + 0.7</button>
+          <button data-a="0.3" data-b="0.6" data-c="0.9">0.3 + 0.6</button>
+          <button data-a="9007199254740992" data-b="1" data-c="9007199254740993">2⁵³ + 1</button>
+          <button data-a="1e16" data-b="1" data-c="10000000000000001">10¹⁶ + 1</button>
+        </div>
+      </section>
+    </div>
   </header>
 
-  <main>
-    <!-- 0. The expression ------------------------------------------------ -->
-    <section id="expr" class="panel">
-      <div class="equation">
-        <input id="a" value="0.1" spellcheck="false" aria-label="first number">
-        <span class="op">+</span>
-        <input id="b" value="0.2" spellcheck="false" aria-label="second number">
-        <span class="op">===</span>
-        <input id="c" value="0.3" spellcheck="false" aria-label="expected result">
-      </div>
-      <div id="verdict" class="verdict"></div>
-      <div class="presets" id="presets">
-        <span>Try:</span>
-        <button data-a="0.1" data-b="0.2" data-c="0.3">0.1 + 0.2</button>
-        <button data-a="0.5" data-b="0.25" data-c="0.75">0.5 + 0.25</button>
-        <button data-a="0.1" data-b="0.7" data-c="0.8">0.1 + 0.7</button>
-        <button data-a="0.3" data-b="0.6" data-c="0.9">0.3 + 0.6</button>
-        <button data-a="9007199254740992" data-b="1" data-c="9007199254740993">2⁵³ + 1</button>
-        <button data-a="1e16" data-b="1" data-c="10000000000000001">10¹⁶ + 1</button>
-      </div>
-    </section>
+  <nav class="toc wrap" aria-label="sections">
+    <a href="#s1">1 · Stored bits</a>
+    <a href="#s2">2 · Why it doesn't fit</a>
+    <a href="#s3">3 · The addition</a>
+    <a href="#s4">4 · Where it landed</a>
+    <a href="#s5">5 · Comparing safely</a>
+  </nav>
 
+  <main class="wrap">
     <!-- 1. Typed vs stored ---------------------------------------------- -->
-    <section class="panel">
-      <h2><span class="num">1</span> What you typed vs what was stored</h2>
-      <p class="hint">Each number is rounded to the nearest value that fits in 64 bits.
-        <b>Click any bit</b> to flip it and see the number change.</p>
-      <div class="legend">
-        <span class="sw sign"></span> sign (1 bit)
-        <span class="sw exp"></span> exponent (11 bits)
-        <span class="sw frac"></span> fraction (52 bits)
+    <section id="s1" class="panel">
+      <div class="panel-head">
+        <span class="num">1</span>
+        <div>
+          <h2>What you typed vs what was stored</h2>
+          <p class="hint">Each number is rounded to the nearest value that fits in 64 bits.
+            <b>Click any bit</b> of a, b or c to flip it.</p>
+        </div>
       </div>
       <div id="operands"></div>
     </section>
 
     <!-- 2. Why: binary expansion ----------------------------------------- -->
-    <section class="panel">
-      <h2><span class="num">2</span> Why it doesn't fit</h2>
-      <p class="hint">In base 10, ⅓ = 0.333… never ends. In base 2, the same happens to ⅒.
-        A double keeps only <b>53 significant bits</b> — everything after is rounded off.</p>
+    <section id="s2" class="panel">
+      <div class="panel-head">
+        <span class="num">2</span>
+        <div>
+          <h2>Why it doesn't fit</h2>
+          <p class="hint">In base 10, ⅓ = 0.333… never ends. In base 2, the same happens to ⅒.
+            A double keeps only <b>53 significant bits</b>; everything after is rounded off.</p>
+        </div>
+      </div>
       <div id="expansions"></div>
     </section>
 
     <!-- 3. The addition ------------------------------------------------- -->
-    <section class="panel">
-      <h2><span class="num">3</span> The addition, step by step</h2>
-      <p class="hint">This is re-done by hand in JavaScript with exact integers (BigInt),
-        and checked against the CPU's own answer.</p>
+    <section id="s3" class="panel">
+      <div class="panel-head">
+        <span class="num">3</span>
+        <div>
+          <h2>The addition, step by step</h2>
+          <p class="hint">Re-done by hand with exact integers (BigInt), then checked bit for bit
+            against the CPU's own answer.</p>
+        </div>
+      </div>
       <ol id="steps" class="steps"></ol>
     </section>
 
     <!-- 4. Number line -------------------------------------------------- -->
-    <section class="panel">
-      <h2><span class="num">4</span> Where it landed</h2>
-      <p class="hint">Doubles are dots on a line with gaps between them.
-        Every result must land on a dot. Gap size = 1 ULP (unit in the last place).</p>
+    <section id="s4" class="panel">
+      <div class="panel-head">
+        <span class="num">4</span>
+        <div>
+          <h2>Where it landed</h2>
+          <p class="hint">Doubles are dots on a line with gaps between them, and every result must land
+            on a dot. The gap is 1 ULP (unit in the last place).</p>
+        </div>
+      </div>
       <div id="line"></div>
     </section>
 
     <!-- 5. Comparing safely ---------------------------------------------- -->
-    <section class="panel">
-      <h2><span class="num">5</span> So how should you compare?</h2>
+    <section id="s5" class="panel">
+      <div class="panel-head">
+        <span class="num">5</span>
+        <div>
+          <h2>So how should you compare?</h2>
+          <p class="hint">The same a, b and c checked four ways.</p>
+        </div>
+      </div>
       <div id="compare" class="compare"></div>
     </section>
   </main>
 
-  <footer>IEEE 754 binary64 · no libraries · <code>node tests/float.test.js</code> checks every step against the hardware</footer>
+  <footer class="wrap">IEEE 754 binary64 · no libraries · <code>npm test</code> checks every step against the hardware</footer>
 
   <script src="js/float.js"></script>
   <script src="js/app.js"></script>
