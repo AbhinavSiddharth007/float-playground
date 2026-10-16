@@ -1,21 +1,15 @@
-/*
- * app.js — the page. Reads the three inputs, asks float.js for the maths,
- * and draws the five panels. No framework: each render function builds a
- * string of HTML and drops it into its container.
- */
+
 (function () {
   'use strict';
   const F = window.FloatLab;
   const $ = (id) => document.getElementById(id);
   const inputs = { a: $('a'), b: $('b'), c: $('c') };
 
-  // Escape text before putting it inside innerHTML (inputs are user-typed).
+
   const esc = (s) => String(s).replace(/[&<>"]/g, (ch) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 
-  // ---------------------------------------------------------------------------
-  // Main loop: read → compute → render everything. Called on every keystroke.
-  // ---------------------------------------------------------------------------
+
   function update() {
     const typed = {}, val = {};
     for (const k of ['a', 'b', 'c']) {
@@ -23,9 +17,9 @@
       val[k] = Number(typed[k]);
       const ok = F.parseDecimal(typed[k]) !== null && Number.isFinite(val[k]);
       inputs[k].classList.toggle('invalid', !ok);
-      if (!ok) return;                     // keep the last good picture on screen
+      if (!ok) return;                    
     }
-    const r = F.softAdd(val.a, val.b);   // our step-by-step version of a + b
+    const r = F.softAdd(val.a, val.b);  
 
     renderVerdict(typed, val, r.result);
     renderOperands(typed, val, r);
@@ -35,10 +29,10 @@
     renderCompare(typed, val, r.result);
   }
 
-  // --- 0. verdict ------------------------------------------------------------
+
   function renderVerdict(typed, val, sum) {
     const eq = sum === val.c;
-    // Paint the printed sum red from the first character where it stops matching c.
+   
     const shown = String(sum), expected = String(val.c);
     let i = 0;
     while (i < shown.length && shown[i] === expected[i]) i++;
@@ -48,9 +42,7 @@
       `<div class="chip ${eq ? 't' : 'f'}">${esc(typed.a)} + ${esc(typed.b)} === ${esc(typed.c)} → ${eq}</div>`;
   }
 
-  // --- 1. typed vs stored ----------------------------------------------------
-
-  /** Typed text → plain decimal digits ("1e16" → "10000000000000000"). */
+ 
   function canonical(str) {
     const p = F.parseDecimal(str);
     const digits = p.N.toString().padStart(p.scale + 1, '0');
@@ -59,10 +51,10 @@
     return (p.negative ? '-' : '') + int + (frac ? '.' + frac : '');
   }
 
-  /** Colour the stored digits: green while they agree with what was typed. */
+ 
   function highlightDiff(typedStr, storedStr) {
     let t = canonical(typedStr);
-    // Same shape for both: 0.1 is the same as 0.1000…, so pad with zeros.
+   
     if (storedStr.includes('.') && !t.includes('.')) t += '.';
     t = t.padEnd(storedStr.length, '0');
     if (t === storedStr) return `<span class="same">${storedStr} (exact)</span>`;
@@ -71,13 +63,10 @@
     return `<span class="same">${storedStr.slice(0, i)}</span><span class="diff">${storedStr.slice(i)}</span>`;
   }
 
-  /**
-   * The 64 bits drawn like a CPU register diagram: three fields side by side,
-   * each labelled with its bit range. Clicking a cell flips it (if `key` is set).
-   */
+  
   function bitsHtml(x, key) {
     const s = F.bitString(x);
-    // [first cell, cell after the last, css class, name]. Cell 0 is bit 63.
+   
     const fields = [[0, 1, 'sign', 'sign'], [1, 12, 'exp', 'exponent · 11'], [12, 64, 'frac', 'fraction · 52']];
     const html = fields.map(([from, to, cls, name]) => {
       let cells = '';
@@ -86,7 +75,7 @@
         const data = key ? ` data-key="${key}" data-i="${i}"` : '';
         cells += `<span class="bit${one}"${data} title="bit ${63 - i}">${s[i]}</span>`;
       }
-      // flex-grow = number of bits, so each field's width matches its size.
+     
       const label = to - from === 1 ? `<b>${name}</b>`
         : `<span>${63 - from}</span><b>${name}</b><span>${64 - to}</span>`;
       return `<div class="field ${cls}" style="flex: ${to - from} 1 0">
@@ -95,7 +84,7 @@
     return `<div class="register-scroll"><div class="register">${html}</div></div>`;
   }
 
-  /** "(−1)^0 × 1.1001… × 2^−4" — the formula filled in for this number. */
+  
   function formula(x) {
     const d = F.decompose(x);
     const frac = d.fraction.toString(2).padStart(52, '0').replace(/0+$/, '') || '0';
@@ -131,7 +120,7 @@
     }).join('');
   }
 
-  // Clicking a bit: flip it, write the new number back into its input.
+ 
   $('operands').addEventListener('click', (e) => {
     const cell = e.target.closest('.bit[data-key]');
     if (!cell) return;
@@ -143,11 +132,11 @@
     update();
   });
 
-  // --- 2. binary expansion ---------------------------------------------------
+ 
   function renderExpansions(typed) {
     $('expansions').innerHTML = ['a', 'b', 'c'].map((k) => {
       const ex = F.binaryExpansion(typed[k], 1200);
-      // Walk the bits, count significant ones from the first 1, mark the 54th+ as lost.
+
       const all = ex.intBits + '.' + ex.fracBits;
       let seen = 0, html = '', leadZeros = 0;
       let started = false;
@@ -173,12 +162,10 @@
     }).join('') + `<p class="hint">Blue: the 53 bits that are kept. Red: cut off, then rounded.</p>`;
   }
 
-  // --- 3. step-by-step addition ---------------------------------------------
 
-  /** Binary of a BigInt, with a minus sign if negative. */
   const bin = (n) => (n < 0n ? '-' : '') + (n < 0n ? -n : n).toString(2);
 
-  /** Long rows: keep the right end (that is where alignment and rounding happen). */
+ 
   function tail(str, width) {
     return str.length <= width ? str.padStart(width) : '…' + str.slice(str.length - width + 1);
   }
@@ -222,15 +209,14 @@ b = <span class="k">${bin(r.B.sign ? -r.B.significand : r.B.significand)}</span>
         <span class="badge ${r.matches ? 'ok' : 'no'}">${r.matches ? 'yes, identical' : 'NO'}</span></li>`;
   }
 
-  // --- 4. number line --------------------------------------------------------
+ 
   function renderLine(cStr, c, sum) {
     const box = $('line');
     if (c === 0 || sum === 0 || Math.sign(c) !== Math.sign(sum)) {
       box.innerHTML = '<p class="hint">Zoom works for two non-zero numbers of the same sign.</p>';
       return;
     }
-    // Distance between the two doubles, counted in "how many doubles apart".
-    // For same-sign doubles the bit patterns are in the same order as the values.
+   
     let steps = F.toBits(sum) - F.toBits(c);
     if (c < 0) steps = -steps;
     if (steps > 6n || steps < -6n) {
@@ -268,10 +254,10 @@ b = <span class="k">${bin(r.B.sign ? -r.B.significand : r.B.significand)}</span>
         : `<span class="diff">a + b is ${Math.abs(s)} dot${Math.abs(s) > 1 ? 's' : ''} away from c → not equal</span>`}</div></div>`;
   }
 
-  // --- 5. comparing safely ---------------------------------------------------
+
   function renderCompare(typed, val, sum) {
     const c = val.c;
-    // How many decimals were typed? Used for the "work in integers" approach.
+    
     const decimals = Math.max(...['a', 'b', 'c'].map((k) => F.parseDecimal(typed[k]).scale));
     const scale = 10 ** decimals;
     const rows = [
@@ -288,7 +274,7 @@ b = <span class="k">${bin(r.B.sign ? -r.B.significand : r.B.significand)}</span>
       `<div class="row"><code>${code}</code><span class="badge ${res ? 'ok' : 'no'}">${res}</span><span class="note">${note}</span></div>`).join('');
   }
 
-  // --- wiring ----------------------------------------------------------------
+ 
   for (const k in inputs) inputs[k].addEventListener('input', update);
   $('presets').addEventListener('click', (e) => {
     const btn = e.target.closest('button');
